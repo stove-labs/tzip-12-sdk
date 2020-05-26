@@ -48,6 +48,10 @@ export class Token<AdapterType extends GenericContractAdapter> {
     })
   }
 
+  isFungible(): Promise<boolean> {
+    return this.adapter!.isFungible(this.tokenId)
+  }
+
   getBalanceForOwner(tokenOwner: tokenOwner): Promise<tokenBalance> {
     return this.adapter.getTokenBalanceForOwner(this.tokenId, tokenOwner)
   }

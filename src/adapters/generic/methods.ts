@@ -11,11 +11,15 @@ export type tokenTransferWithId = {
 
 export type tokenTransferWithIdBatch = tokenTransferWithId[]
 
-export type michelsonTokenTransfer = {
+export type michelsonTokenTransferContents = {
   token_id: tokenId
   amount: tokenAmount
-  from_: tokenOwner
   to_: tokenOwner
+}
+
+export type michelsonTokenTransfer = {
+  from_: tokenOwner
+  txs: michelsonTokenTransferContents[]
 }
 
 export type michelsontokenTransferBatch = michelsonTokenTransfer[]

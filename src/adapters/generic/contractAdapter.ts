@@ -4,7 +4,8 @@ import { OriginateParamsBase } from '@taquito/taquito/dist/types/operations/type
 import { OriginationOperation } from '@taquito/taquito/dist/types/operations/origination-operation'
 import { Contract, ContractMethod } from '@taquito/taquito/dist/types/contract/contract'
 import { Token } from '../../models/token'
-import { Token as OriginationToken } from '../../models/origination/token'
+import { Token as TokenOrigination } from '../../models/origination/token'
+import { NFTToken as NFTTokenOrigination } from '../../models/origination/nftToken'
 import { TransactionOperation } from '@taquito/taquito/dist/types/operations/transaction-operation'
 import { type } from 'os'
 import {
@@ -18,7 +19,7 @@ import {
 export type contractCode = string
 
 export type ContractStorageParams = {
-  tokens: OriginationToken[]
+  tokens: (TokenOrigination | NFTTokenOrigination)[]
   /**
    * Allow for arbitrary data to be passed to the contract storage adapter
    */
@@ -43,6 +44,7 @@ export abstract class GenericContractAdapter {
   abstract getTokenBalanceForOwner(tokenId: tokenId, tokenOwner: tokenOwner): Promise<tokenBalance>
   abstract getTotalTokenSupply(tokenId: tokenId): Promise<totalSupply>
   abstract getAllTokens(): Promise<Token<any>[]>
+  abstract isFungible(tokenId: tokenId): Promise<boolean>
 
   abstract get storage(): Promise<GenericStorage>
 
@@ -64,12 +66,16 @@ export abstract class GenericContractAdapter {
   transferToken(tokenTransfer: tokenTransferWithId): ContractMethod {
     const contractParameter: michelsontokenTransferBatch = [
       {
-        token_id:
-          ((tokenTransfer.token as unknown) as Token<any>).tokenId ||
-          ((tokenTransfer.token as unknown) as tokenId),
-        amount: tokenTransfer.amount,
         from_: tokenTransfer.from,
-        to_: tokenTransfer.to
+        txs: [
+          {
+            token_id:
+              ((tokenTransfer.token as unknown) as Token<any>).tokenId ||
+              ((tokenTransfer.token as unknown) as tokenId),
+            amount: tokenTransfer.amount,
+            to_: tokenTransfer.to
+          }
+        ]
       }
     ]
     return this.methods.transfer(contractParameter)
@@ -79,12 +85,16 @@ export abstract class GenericContractAdapter {
     const contractParameter: michelsontokenTransferBatch = tokenTransferBatch.map(
       (tokenTransfer: tokenTransferWithId) => {
         const michelsonTokenTransfer: michelsonTokenTransfer = {
-          token_id:
-            ((tokenTransfer.token as unknown) as Token<any>).tokenId ||
-            ((tokenTransfer.token as unknown) as tokenId),
-          amount: tokenTransfer.amount,
           from_: tokenTransfer.from,
-          to_: tokenTransfer.to
+          txs: [
+            {
+              token_id:
+                ((tokenTransfer.token as unknown) as Token<any>).tokenId ||
+                ((tokenTransfer.token as unknown) as tokenId),
+              amount: tokenTransfer.amount,
+              to_: tokenTransfer.to
+            }
+          ]
         }
         return michelsonTokenTransfer
       }
